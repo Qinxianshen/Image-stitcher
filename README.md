@@ -23,6 +23,17 @@
 
 ![网络概括](./2.png)
 
+
+#### 原始图片
+
+![网络概括](./Hnet_test_oringn_image.png)
+
+#### 变化图片
+
+![网络概括](./Hnet_test_warped_image.png)
+
+
+
 #### Tips
 
 [Homography Net](https://arxiv.org/pdf/1606.03798.pdf)
