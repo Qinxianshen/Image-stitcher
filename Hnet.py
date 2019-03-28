@@ -102,6 +102,9 @@ def get_train(path = "./ms_coco_test_images/*.jpg", num_examples = 1280):
         warped_patch = inv_warped_image[y:y + patch_size, x:x + patch_size]
         # make into dataset
         training_image = np.dstack((original_patch, warped_patch))
+#	plt.imshow(warped_patch) 
+#	plt.title('train_images image')
+#	plt.show()
         H_four_points = np.subtract(np.array(perturbed_four_points), np.array(four_points))
         X[i, :, :] = training_image
         Y[i, :] = H_four_points.reshape(-1)        
@@ -191,8 +194,48 @@ def get_test(path):
     training_image = np.dstack((original_patch, warped_patch))
     val_image = training_image.reshape((1,128,128,2))
     
-    return color_image, H_inverse,val_image,four_points_array
+    return color_image, H_inverse,val_image,four_points_array,four_points
 
+
+# Use the keypoints to stitch the images
+def get_stitched_image(img1, img2, M):
+
+	# Get width and height of input images	
+	w1,h1 = img1.shape[:2]
+	w2,h2 = img2.shape[:2]
+
+	# Get the canvas dimesions
+	img1_dims = np.float32([ [0,0], [0,w1], [h1, w1], [h1,0] ]).reshape(-1,1,2)
+	img2_dims_temp = np.float32([ [0,0], [0,w2], [h2, w2], [h2,0] ]).reshape(-1,1,2)
+
+
+	# Get relative perspective of second image
+	img2_dims = cv2.perspectiveTransform(img2_dims_temp, M)
+
+	# Resulting dimensions
+	result_dims = np.concatenate( (img1_dims, img2_dims), axis = 0)
+
+	# Getting images together
+	# Calculate dimensions of match points
+	[x_min, y_min] = np.int32(result_dims.min(axis=0).ravel() - 0.5)
+	[x_max, y_max] = np.int32(result_dims.max(axis=0).ravel() + 0.5)
+	
+	# Create output array after affine transformation 
+	transform_dist = [-x_min,-y_min]
+	transform_array = np.array([[1, 0, transform_dist[0]], 
+								[0, 1, transform_dist[1]], 
+								[0,0,1]]) 
+
+	# Warp images to get the resulting image
+	result_img = cv2.warpPerspective(img2, transform_array.dot(M), 
+									(x_max-x_min, y_max-y_min))
+	result_img[transform_dist[1]:w1+transform_dist[1], 
+				transform_dist[0]:h1+transform_dist[0]] = img1
+
+	# Return the result
+	return result_img
+
+##############           train
 
 #train_number = 200
 #t0 = time.time()
@@ -211,16 +254,17 @@ def get_test(path):
 #    print("training_number:"+str(i)+"   spend time:"+str(t2-t1)+"s" + "    total time:" + str(t2-t0)+"s")
 
 #train_images,train_labels = get_train(path = "./test_images/*.jpg", num_examples = 5)
-#print(train_images)
-#print(train_labels)
+#print(train_images.shape)
+#print(len(train_labels))
 
-#voc image test 
+
+
+#######################################voc image test 
 K.clear_session()
 model = homography_regression_model()
 model.load_weights('my_model_weights.h5')
 
-color_image, H_matrix,val_image,four_points_array = get_test("./test_images/*.jpg")
-print(H_matrix)
+color_image, H_matrix,val_image,four_points_array,four_points = get_test("./test_images/*.jpg")
 four_points_array_ = four_points_array.reshape((1,4,2))
 rectangle_image = cv2.polylines(color_image, four_points_array_, 1, (0,0,255),2)
 warped_image = cv2.warpPerspective(rectangle_image, H_matrix, (color_image.shape[1], color_image.shape[0]))
@@ -228,6 +272,12 @@ labels = model.predict(val_image)
 K.clear_session()
 labels_ = np.int32(labels.reshape((4,2)))
 perturbed_four = np.subtract(four_points_array,labels_)
+print(perturbed_four)
+print("perturbed_four------")
+print(four_points_array)
+print("four_points_array------")
+print(labels_)
+print("labels_---------------")
 perturbed_four_ = perturbed_four.reshape((1,4,2))
 warped_image = cv2.polylines(warped_image, perturbed_four_, 1, (255,0,0),2)
  
@@ -235,7 +285,31 @@ plt.imshow(rectangle_image)
 plt.title('original image')  
 plt.show()
 
+
+
 plt.imshow(warped_image) 
 plt.title('warped_image image')
 plt.show()
+
+
+######################################### image stiiching
+
+
+# Stitch the images together using homography matrix
+
+four_points=np.float32(four_points)
+perturbed_four_points = perturbed_four_.reshape((4,2))
+print(four_points.shape)
+print(perturbed_four_points.shape)
+H = cv2.getPerspectiveTransform(np.float32(four_points), np.float32(perturbed_four_points))
+H_inverse = inv(H)
+result_image = get_stitched_image(rectangle_image, warped_image, H_inverse)
+
+plt.imshow(result_image) 
+plt.title('result_image image')
+plt.show()
+
+
+
+
 
