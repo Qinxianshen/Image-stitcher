@@ -258,7 +258,6 @@ def get_stitched_image(img1, img2, M):
 #print(len(train_labels))
 
 
-
 #######################################voc image test 
 K.clear_session()
 model = homography_regression_model()
@@ -290,6 +289,68 @@ plt.show()
 plt.imshow(warped_image) 
 plt.title('warped_image image')
 plt.show()
+
+
+
+
+############################change test
+
+img1 = cv2.imread("./1.jpg")
+img2 = cv2.imread("./2.jpg")
+
+patch_size = 128
+
+rho = 32
+height = 240
+width = 320
+
+img1 = cv2.resize(img1, (width, height))
+img2 = cv2.resize(img2, (width, height))
+
+img1 = cv2.cvtColor(img1, cv2.COLOR_RGB2GRAY)
+img2 = cv2.cvtColor(img2, cv2.COLOR_RGB2GRAY)
+
+y = random.randint(rho, height - rho - patch_size)  # row
+x = random.randint(rho,  width - rho - patch_size)  # col
+top_left_point = (x, y)
+bottom_left_point = (patch_size + x, y)
+bottom_right_point = (patch_size + x, patch_size + y)
+top_right_point = (x, patch_size + y)
+four_points = [top_left_point, bottom_left_point, bottom_right_point, top_right_point]
+four_points_array = np.array(four_points)
+
+four_points_array_ = four_points_array.reshape((1,4,2))
+
+rectangle_image = cv2.polylines(img1, four_points_array_, 1, (0,0,255),2)
+
+
+# grab image patches
+original_patch = img1[y:y + patch_size, x:x + patch_size]
+warped_patch = img2[y:y + patch_size, x:x + patch_size]
+# make into dataset
+training_image = np.dstack((original_patch, warped_patch))
+val_image = training_image.reshape((1,128,128,2))
+
+
+labels = model.predict(val_image)
+K.clear_session()
+labels_ = np.int32(labels.reshape((4,2)))
+perturbed_four = np.subtract(four_points_array,labels_)
+
+perturbed_four_ = perturbed_four.reshape((1,4,2))
+warped_image = cv2.polylines(img2, perturbed_four_, 1, (255,0,0),2)
+ 
+plt.imshow(rectangle_image) 
+plt.title('original image')  
+plt.show()
+
+
+
+plt.imshow(warped_image) 
+plt.title('warped_image image')
+plt.show()
+
+
 
 
 ######################################### image es

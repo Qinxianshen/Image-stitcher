@@ -33,6 +33,17 @@
 ![网络概括](./pic/4.png)
 
 
+### (3)使用无监督的方法
+
+![网络概括](./pic/unsuper_hnet.png)
+
+#### 评估方法
+
+![评估方法](./pic/hnet_pinggu.png)
+
+![评估方法](./pic/hnet_pinggu2.png)
+
+
 
 #### Tips
 
