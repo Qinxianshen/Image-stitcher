@@ -276,14 +276,14 @@ def get_stitched_image(img1, img2, M):
 
 ##############           train
 
-train_number = 1000
+train_number = 500
 t0 = time.time()
 for i in range(train_number):
     t1 = time.time()
     train_images,train_labels = get_train(path = "./images/*.jpg", num_examples = 14)   
     model = homography_regression_model()
-#    print("loading model weights2")
-#    model.load_weights('my_model_weights2.h5')
+    print("loading model weights2")
+    model.load_weights('my_model_weights3.h5')
     print("training ......")
     model.fit(train_images,train_labels,epochs=1, batch_size=64)
     print("saving model weights")

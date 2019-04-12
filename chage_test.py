@@ -204,7 +204,7 @@ def get_test2(path):
     width = 128
     #random read image
     loc_list = glob(path)
-    index = 0
+    index = 2
     img_file_location = loc_list[index]
     color_image = plt.imread(img_file_location)
     tmp = color_image
@@ -357,7 +357,7 @@ plt.imshow(color_image)
 plt.title('original image')  
 plt.show()
 
-color_image_after = cv2.warpPerspective(orgin1, H_inverse, (orgin1.shape[1], orgin1.shape[0]))
+color_image_after = cv2.warpPerspective(orgin1, H_inverse, (orgin2.shape[1], orgin2.shape[0]))
 print(color_image_after.shape)
 print(orgin2.shape)
 plt.imshow(color_image_after) 
