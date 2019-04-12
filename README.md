@@ -89,6 +89,15 @@
 （3）Hnet_train.py 用于训练
 
 
+### 图像拼接：
+
+（1）传统方法的拼接 
+
+![问题一](./pic/pingjie_xie.jpg)
+
+
+
+
 
 
 #### Tips

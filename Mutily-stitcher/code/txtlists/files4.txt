@@ -1,0 +1,3 @@
+../images/xie1.jpg
+../images/xie2.jpg
+../images/xie3.jpg
