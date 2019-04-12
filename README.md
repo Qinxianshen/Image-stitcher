@@ -44,6 +44,25 @@
 ![评估方法](./pic/hnet_pinggu2.png)
 
 
+### (4) 计算误差的方法： MACE (Mean Ave. Corner Error)
+
+200次 :('Ave. Corner Error: ', '270.4477227329222')
+
+1000次：('Ave. Corner Error: ', '73.6007446534849')
+
+
+
+
+### 文件功能：
+
+（1）change_test.py  编写了get_test2 方便之后计算两张图片的H矩阵
+
+（2）change_test.py 用于测试并计算MACE
+
+（3）Hnet_train.py 用于训练
+
+
+
 
 #### Tips
 

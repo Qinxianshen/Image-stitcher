@@ -198,6 +198,44 @@ def get_test(path):
     return color_image, H_inverse,val_image,four_points_array,four_points
 
 
+def get_test2(path):
+    rho = 32
+    patch_size = 128
+    height = 128
+    width = 128
+    #random read image
+    loc_list = glob(path)
+    index = 0
+    img_file_location = loc_list[index]
+    color_image = plt.imread(img_file_location)
+    tmp = color_image
+    color_image = cv2.resize(color_image,(width,height))
+    gray_image = cv2.cvtColor(color_image, cv2.COLOR_RGB2GRAY)
+    #points
+    y = 0  # row
+    x = 0  # col
+    top_left_point = (x, y)
+    bottom_left_point = (patch_size + x, y)
+    bottom_right_point = (patch_size + x, patch_size + y)
+    top_right_point = (x, patch_size + y)
+    four_points = [top_left_point, bottom_left_point, bottom_right_point, top_right_point]
+    four_points_array = np.array(four_points)
+
+    print(np.float32(four_points).shape)
+
+    #second image
+    index = 1
+    img_file_location2 = loc_list[index]
+    color_image2 = plt.imread(img_file_location2)
+    tmp2 = color_image2
+    color_image2 = cv2.resize(color_image2,(width,height))
+    gray_image_after = cv2.cvtColor(color_image2, cv2.COLOR_RGB2GRAY)
+
+    training_image = np.dstack((gray_image, gray_image_after))
+    val_image = training_image.reshape((1,128,128,2))
+    
+    return color_image,color_image2,val_image,four_points_array,tmp,tmp2
+
 # Use the keypoints to stitch the images
 def get_stitched_image(img1, img2, M):
 
@@ -238,77 +276,30 @@ def get_stitched_image(img1, img2, M):
 
 ##############           train
 
-#train_number = 200
-#t0 = time.time()
-#for i in range(train_number):
-#    t1 = time.time()
-#    train_images,train_labels = get_train(path = "./images/*.jpg", num_examples = 1280)      
-#    model = homography_regression_model()
-#    print("loading model weights")
-#    model.load_weights('my_model_weights.h5')
-#    print("training ......")
-#    model.fit(train_images,train_labels,epochs=1, batch_size=64)
-#    print("saving model weights")
-#    model.save_weights('my_model_weights2.h5')
-#    K.clear_session()
-#    t2 = time.time()
-#    print("training_number:"+str(i)+"   spend time:"+str(t2-t1)+"s" + "    total time:" + str(t2-t0)+"s")
-
-#train_images,train_labels = get_train(path = "./images/*.jpg", num_examples = 5)
-#print(train_images.shape)
-#print(len(train_labels))
+train_number = 1000
+t0 = time.time()
+for i in range(train_number):
+    t1 = time.time()
+    train_images,train_labels = get_train(path = "./images/*.jpg", num_examples = 14)   
+    model = homography_regression_model()
+#    print("loading model weights2")
+#    model.load_weights('my_model_weights2.h5')
+    print("training ......")
+    model.fit(train_images,train_labels,epochs=1, batch_size=64)
+    print("saving model weights")
+    model.save_weights('my_model_weights3.h5')
+    K.clear_session()
+    t2 = time.time()
+    print("training_number:"+str(i)+"   spend time:"+str(t2-t1)+"s" + "    total time:" + str(t2-t0)+"s")
 
 
-
-#######################################voc image test 
-K.clear_session()
-model = homography_regression_model()
-model.load_weights('my_model_weights2.h5')
-
-color_image, H_matrix,val_image,four_points_array,four_points = get_test("./images/*.jpg")
-four_points_array_ = four_points_array.reshape((1,4,2))
-rectangle_image = cv2.polylines(color_image, four_points_array_, 1, (0,0,255),2)
-warped_image = cv2.warpPerspective(rectangle_image, H_matrix, (color_image.shape[1], color_image.shape[0]))
-labels = model.predict(val_image)
-K.clear_session()
-labels_ = np.int32(labels.reshape((4,2)))
-perturbed_four = np.subtract(four_points_array,labels_)
-print(perturbed_four)
-print("perturbed_four------")
-print(four_points_array)
-print("four_points_array------")
-print(labels_)
-print("labels_---------------")
-perturbed_four_ = perturbed_four.reshape((1,4,2))
-warped_image = cv2.polylines(warped_image, perturbed_four_, 1, (255,0,0),2)
- 
-plt.imshow(rectangle_image) 
-plt.title('original image')  
-plt.show()
+train_images,train_labels = get_train(path = "./images/*.jpg", num_examples = 5)
+print(train_images.shape)
+print(len(train_labels))
 
 
 
-plt.imshow(warped_image) 
-plt.title('warped_image image')
-plt.show()
 
-
-######################################### image stiiching
-
-
-# Stitch the images together using homography matrix
-
-#four_points=np.float32(four_points)
-#perturbed_four_points = perturbed_four_.reshape((4,2))
-#print(four_points.shape)
-#print(perturbed_four_points.shape)
-#H = cv2.getPerspectiveTransform(np.float32(four_points), np.float32(perturbed_four_points))
-#H_inverse = inv(H)
-#result_image = get_stitched_image(rectangle_image, warped_image, H_inverse)
-
-#plt.imshow(result_image) 
-#plt.title('result_image image')
-#plt.show()
 
 
 

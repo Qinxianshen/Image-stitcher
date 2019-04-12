@@ -186,7 +186,6 @@ def get_test(path):
     #compute H
     H = cv2.getPerspectiveTransform(np.float32(four_points), np.float32(perturbed_four_points))
     H_inverse = inv(H)
-    print(H_inverse)
     inv_warped_image = cv2.warpPerspective(gray_image, H_inverse, (width, height))
     # grab image patches
     original_patch = gray_image[y:y + patch_size, x:x + patch_size]
@@ -194,9 +193,50 @@ def get_test(path):
     # make into dataset
     training_image = np.dstack((original_patch, warped_patch))
     val_image = training_image.reshape((1,128,128,2))
-    
-    return color_image, H_inverse,val_image,four_points_array,four_points
 
+    H_four_points = np.subtract(np.array(perturbed_four_points), np.array(four_points))
+    
+    return color_image, H_inverse,val_image,four_points_array,four_points,H_four_points
+
+
+def get_test2(path):
+    rho = 32
+    patch_size = 128
+    height = 128
+    width = 128
+    #random read image
+    loc_list = glob(path)
+    index = 0
+    img_file_location = loc_list[index]
+    color_image = plt.imread(img_file_location)
+    tmp = color_image
+    color_image = cv2.resize(color_image,(width,height))
+    gray_image = cv2.cvtColor(color_image, cv2.COLOR_RGB2GRAY)
+    #points
+    y = 0  # row
+    x = 0  # col
+    top_left_point = (x, y)
+    bottom_left_point = (patch_size + x, y)
+    bottom_right_point = (patch_size + x, patch_size + y)
+    top_right_point = (x, patch_size + y)
+    four_points = [top_left_point, bottom_left_point, bottom_right_point, top_right_point]
+    four_points_array = np.array(four_points)
+
+    print(np.float32(four_points).shape)
+
+    #second image
+    index = 1
+    img_file_location2 = loc_list[index]
+    color_image2 = plt.imread(img_file_location2)
+    tmp2 = color_image2
+    color_image2 = cv2.resize(color_image2,(width,height))
+    gray_image_after = cv2.cvtColor(color_image2, cv2.COLOR_RGB2GRAY)
+
+    training_image = np.dstack((gray_image, gray_image_after))
+    val_image = training_image.reshape((1,128,128,2))
+    
+    return color_image,color_image2,val_image,four_points_array,tmp,tmp2
+    
 
 # Use the keypoints to stitch the images
 def get_stitched_image(img1, img2, M):
@@ -263,9 +303,9 @@ def get_stitched_image(img1, img2, M):
 #######################################voc image test 
 K.clear_session()
 model = homography_regression_model()
-model.load_weights('my_model_weights2.h5')
+model.load_weights('my_model_weights3.h5')
 
-color_image, H_matrix,val_image,four_points_array,four_points = get_test("./images/*.jpg")
+color_image, H_matrix,val_image,four_points_array,four_points,H_four_points = get_test("./test_images3/*.jpg")
 four_points_array_ = four_points_array.reshape((1,4,2))
 rectangle_image = cv2.polylines(color_image, four_points_array_, 1, (0,0,255),2)
 warped_image = cv2.warpPerspective(rectangle_image, H_matrix, (color_image.shape[1], color_image.shape[0]))
@@ -291,6 +331,29 @@ plt.show()
 plt.imshow(warped_image) 
 plt.title('warped_image image')
 plt.show()
+
+print(H_four_points)
+
+### compute MACE
+
+sum = 0
+for i in range(0, 4):
+    #print(H_four_points[i][0])
+    #print("----")
+    #print(labels_[i][0])
+    h = np.square(H_four_points[i][0] - labels_[i][0]) + np.square(H_four_points[i][1] - labels_[i][1])
+    h = np.sqrt(h)
+    print('h: ', h)
+    sum = sum + h
+sum = sum / len(labels_)
+print('Ave. Corner Error: ', sum)
+
+
+
+
+#cv2.imshow("change",color_image_after)
+#cv2.waitKey()
+
 
 
 ######################################### image stiiching
