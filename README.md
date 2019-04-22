@@ -96,7 +96,9 @@
 ![问题一](./pic/pingjie_xie.jpg)
 
 
+(2) 传统方法的拼接二
 
+![问题一](./pic/stitched.png)
 
 
 
